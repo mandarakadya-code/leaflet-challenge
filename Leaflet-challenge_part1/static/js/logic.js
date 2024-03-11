@@ -1,6 +1,6 @@
 let myMap = L.map("map", {
-    center: [27.96044, -82.30695],
-    zoom: 7
+    center: [39.7392, -104.9903],
+    zoom: 5
   });
 
   
@@ -15,58 +15,50 @@ let geoData = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_wee
 map.addTo(myMap);
 
 d3.json(geoData).then(function(data) {
-    let geojson = L.choropleth(data, {
-        valueProperty: "data.features[0].properties.mag",
+    function fillColorValue(x){
+        if(x>-10 && x<=10){
+            return "#5bcf57";
+        }else if(x>10 && x<=30){
+            return "#e0f582";
+        }else if(x>30 && x<=50){
+            return "#f7cf79";
+        }else if(x>50 && x<=70){
+            return "#de9b0b";
+        }else if(x>70 && x<=90){
+            return "#d1721f";
+        }else if(x>90){
+            return "#b55705";
+        }
 
-    // Set the color scale.
-    scale: ["#ffffb2", "#b10026"],
+    }
+    for(let i = 0; i < data.features.length; i++){
+        // console.log(data.features[i].geometry.coordinates);
+        // console.log(data.features[i].properties.mag * 1000)
+        L.circleMarker([data.features[i].geometry.coordinates[1],data.features[i].geometry.coordinates[0]],{
+                fillOpacity: 0.75,
+            // color: ["#5bcf57","#e0f582","#f7cf79","#de9b0b","#d1721f","#b55705"],
+            color: "black",
+            weight: 0.5,
+            fillColor: fillColorValue(data.features[i].geometry.coordinates[2]),
+            radius: data.features[i].properties.mag * 5
+            
+          }).bindPopup("Place of earthquake: "+data.features[i].properties.place+"<br/>Deapth of earthquake: "+ data.features[i].geometry.coordinates[2]).addTo(myMap);
+        }
+        // Legend information
+        var legend = L.control({ position: "bottomright" });
 
-    // The number of breaks in the step range
-    steps: 6,
-
-    onEachFeature: function(feature, layer) {
-        layer.bindPopup("Place of earthquake: $" + data.features[0].properties.place);
-      }
-    }).addTo(myMap);
-
-     // Set up the legend.
-  let legend = L.control({ position: "bottomright" });
-  legend.onAdd = function() {
-    let div = L.DomUtil.create("div", "info legend");
-    let limits = geojson.options.limits;
-    let colors = geojson.options.colors;
-    let labels = [];
-
-    // Add the minimum and maximum.
-    let legendInfo = 
-      "<div class=\"labels\">" +
-        "<div class=\"min\">" + limits[0] + "</div>" +
-        "<div class=\"max\">" + limits[limits.length - 1] + "</div>" +
-      "</div>";
-
-    div.innerHTML = legendInfo;
-
-    limits.forEach(function(limit, index) {
-      labels.push("<li style=\"background-color: " + colors[index] + "\"></li>");
-    });
-
-    div.innerHTML += "<ul>" + labels.join("") + "</ul>";
-    return div;
-  };
-
-//   // Adding the legend to the map
-//   legend.addTo(myMap);
-//     L.circle(data,{
-//         fillOpacity: 0.75,
-//     color: ["green","yellow","orange","red"],
-//     // fillColor: "purple",
-//     // Setting our circle's radius to equal the output of our markerSize() function:
-//     // This will make our marker's size proportionate to its population.
-//     radius: data.features[0].properties.mag
-//   }).bindPopup("Place of earthquake: $" + data.features[0].properties.place).addTo(myMap);
+        legend.onAdd = function() {
+          var div = L.DomUtil.create("div", "legend");
+          
+          div.innerHTML += '<i style="background: #5bcf57"></i><span>-10-10</span><br>';
+          div.innerHTML += '<i style="background: #e0f582"></i><span>10-30</span><br>';
+          div.innerHTML += '<i style="background: #f7cf79"></i><span>30-50</span><br>';
+          div.innerHTML += '<i style="background: #de9b0b"></i><span>50-70</span><br>';
+          div.innerHTML += '<i style="background: #d1721f"></i><span>70-90</span><br>';
+          div.innerHTML += '<i style="background: #b55705"></i><span>90+</span><br>';
+           return div;
+        };
+        
+        legend.addTo(myMap);
    
 });
-
-// d3.json(geoData).then(function(data) {
-
-// });
